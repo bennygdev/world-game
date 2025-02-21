@@ -1,34 +1,21 @@
-import { useState, useEffect } from 'react'
-import './App.css'
-import axios from 'axios';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { AuthProvider } from './components/Auth';
+import Home from './components/Home';
+import LoginForm from './components/forms/LoginForm';
+import RegisterForm from './components/forms/RegisterForm';
 
 function App() {
-  const [array, setArray] = useState([]);
-
-  const fetchAPI = async () => {
-    const response = await axios.get('http://localhost:8080/api');
-    setArray(response.data.fruits);
-    console.log(response.data.fruits);
-  };
-
-  useEffect(() => {
-    fetchAPI();
-  }, []);
-
   return (
-    <>
-      {
-        array.map((fruit, index) => {
-          return (
-            <div key={index}>
-              <p>{fruit}</p>
-              <br />
-            </div>
-          );
-        })
-      }
-    </>
-  )
+    <Router>
+      <AuthProvider>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={<LoginForm />} />
+          <Route path="/register" element={<RegisterForm />} />
+        </Routes>
+      </AuthProvider>
+    </Router>
+  );
 }
 
-export default App
+export default App;
