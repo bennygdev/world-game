@@ -11,7 +11,7 @@ services:
       - ./client:/app
       - /app/node_modules
     environment:
-      - VITE_API_URL=http://localhost:8080
+      - VITE_API_URL=http://server:8080
     depends_on:
       - server
 
@@ -39,7 +39,7 @@ services:
         condition: service_started
 
   postgres:
-    image: postgres:17-bookworm
+    image: postgres:17
     environment:
       - POSTGRES_USER=${DB_USER}
       - POSTGRES_PASSWORD=${DB_PASSWORD}
@@ -56,12 +56,18 @@ services:
       retries: 5
 
   redis:
-    image: redis:7-bookworm
+    image: redis:7
     ports:
       - "6379:6379"
     volumes:
       - redis_data:/data
-
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      retries: 5
+      start_period: 10s
+      timeout: 5s
+    
 volumes:
   postgres_data:
   redis_data:
