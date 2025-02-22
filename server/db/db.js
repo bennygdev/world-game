@@ -1,6 +1,6 @@
 const { Pool } = require('pg');
 const { createClient } = require('redis');
-const { pgConfig } = require('./config');
+const { pgConfig } = require('../config/config');
 
 // create postgreSQL connection pool
 const pool = new Pool(pgConfig);
