@@ -1,8 +1,8 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { AuthProvider } from './components/Auth';
-import Home from './components/Home';
-import LoginForm from './components/forms/LoginForm';
-import RegisterForm from './components/forms/RegisterForm';
+import { AuthProvider } from './hooks/Auth';
+import Home from './pages/Home';
+import LoginPage from './pages/Login';
+import RegisterPage from './pages/Register';
 
 function App() {
   return (
@@ -10,8 +10,8 @@ function App() {
       <AuthProvider>
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/login" element={<LoginForm />} />
-          <Route path="/register" element={<RegisterForm />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
         </Routes>
       </AuthProvider>
     </Router>
