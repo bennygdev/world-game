@@ -7,7 +7,7 @@ export default function Navbar() {
   return (
     <nav className="bg-white shadow-sm">
       <div className="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
-        <h1 className="text-xl font-semibold">World Game</h1>
+        <h1 className="text-xl font-semibold">{user ? `Welcome, ${user.username}!` : 'Welcome, Guest!'}</h1>
         <div className="space-x-4">
           {user ? (
             <button

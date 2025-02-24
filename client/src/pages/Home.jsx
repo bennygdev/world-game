@@ -1,16 +1,12 @@
-import { useAuth } from '../hooks/Auth';
 import Navbar from '../components/Navbar';
+import WorldMap from '../components/WorldMap';
 
 export default function Home() {
-  const { user } = useAuth();
-
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="h-screen overflow-hidden bg-slate-100 lg:bg-[#A3D9EF] flex flex-col">
       <Navbar />
-      <main className="max-w-7xl mx-auto px-4 py-12">
-        <h2 className="text-3xl font-bold text-center">
-          {user ? `Welcome, ${user.username}!` : 'Welcome, Guest!'}
-        </h2>
+      <main className="flex-1 relative">
+        <WorldMap />
       </main>
     </div>
   );
