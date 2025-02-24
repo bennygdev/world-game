@@ -1,8 +1,33 @@
-import { useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import * as d3 from 'd3';
+import Game from './Game';
 
 function WorldMap() {
   const svgRef = useRef(null);
+  const [gameEnded, setGameEnded] = useState(false);
+  const [gameStats, setGameStats] = useState(null);
+
+  const handleCorrectGuess = (countryCode) => {
+    console.log('Trying to find country:', countryCode);
+    const path = d3.select(svgRef.current)
+      .select(`#${countryCode}`); // remove 'path' from selector
+    
+    if (path.node()) {
+      console.log('Found country path, updating color');
+      path
+        .style('fill', '#4ade80') // color fill when correct
+        .style('cursor', 'default')
+        .on('mouseenter', null)
+        .on('mouseleave', null);
+    } else {
+      console.log('Country path not found:', countryCode);
+    }
+  };
+
+  const handleGameEnd = (stats) => {
+    setGameEnded(true);
+    setGameStats(stats);
+  };
 
   useEffect(() => {
     if (!svgRef.current) return;
@@ -12,14 +37,13 @@ function WorldMap() {
     // zoom behavior
     const zoom = d3
       .zoom()
-      .scaleExtent([1, 8]) // min and max zoom scale
+      .scaleExtent([1, 8])
       .on('zoom', (event) => {
         svg.select('g').attr('transform', event.transform);
       });
 
     svg.call(zoom);
 
-    // double-click to reset
     svg.on('dblclick.zoom', () => {
       svg.transition().duration(750).call(zoom.transform, d3.zoomIdentity);
     });
@@ -31,13 +55,16 @@ function WorldMap() {
       .style('stroke', '#ccc')
       .style('stroke-width', '0.5')
       .on('mouseenter', function () {
-        d3.select(this).style('fill', '#ccc').style('cursor', 'pointer');
+        if (!gameEnded) {
+          d3.select(this).style('fill', '#ccc').style('cursor', 'pointer');
+        }
       })
       .on('mouseleave', function () {
-        d3.select(this).style('fill', '#fff');
+        if (!gameEnded && d3.select(this).style('fill') !== 'rgb(74, 222, 128)') {
+          d3.select(this).style('fill', '#fff');
+        }
       });
 
-    // handle window resize
     const handleResize = () => {
       const width = svg.node().parentNode.clientWidth;
       const height = svg.node().parentNode.clientHeight;
@@ -45,18 +72,17 @@ function WorldMap() {
     };
 
     window.addEventListener('resize', handleResize);
-    handleResize(); // initial sizing
+    handleResize();
 
-    // cleanup function
     return () => {
       svg.on('.zoom', null);
       window.removeEventListener('resize', handleResize);
     };
-  }, []);
+  }, [gameEnded]);
 
   return (
     <>
-      <div className="absolute inset-0">
+      <div className="w-full h-full min-h-[500px] max-h-[100vh] relative">
         <svg
           ref={svgRef}
           xmlns="http://www.w3.org/2000/svg"
@@ -1347,6 +1373,35 @@ function WorldMap() {
             />
           </g>
         </svg>
+
+        {gameEnded && gameStats && (
+          <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+            <div className="bg-white p-6 rounded-lg shadow-lg text-center">
+              <h2 className="text-2xl font-bold mb-4">
+                Game Over!
+              </h2>
+              <p className="mb-2">
+                You correctly guessed {gameStats.correctGuesses} out of {gameStats.totalCountries} countries
+              </p>
+              <p className="mb-4">
+                Score: {Math.round((gameStats.correctGuesses / gameStats.totalCountries) * 100)}%
+              </p>
+              <button
+                onClick={() => window.location.reload()}
+                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+              >
+                Play Again
+              </button>
+            </div>
+          </div>
+        )}
+        
+        {!gameEnded && (
+          <Game
+            onCorrectGuess={handleCorrectGuess}
+            onGameEnd={handleGameEnd}
+          />
+        )}
       </div>
     </>
   );
