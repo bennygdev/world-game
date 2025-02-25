@@ -12,11 +12,12 @@ const Game = ({ onCorrectGuess, onGameEnd }) => {
       try {
         const response = await fetch('https://restcountries.com/v3.1/all');
         const data = await response.json();
-        const unCountries = data.filter(country => 
-          country.unMember === true // filter only UN member states
+        
+        // filter for UN member states
+        let gameCountries = data.filter(country => 
+          country.unMember === true
         ).map(country => ({
           name: country.name.common.toLowerCase(),
-          // use ccn3 (numeric code) or cca2 (2-letter code) as fallback
           id: country.cca2,
           alternatives: [
             ...(country.altSpellings || []).map(s => s.toLowerCase()),
@@ -26,7 +27,79 @@ const Game = ({ onCorrectGuess, onGameEnd }) => {
             )
           ]
         }));
-        setCountries(unCountries);
+        
+        // add the 5 special cases that might be missing, 192 -> 197
+        const specialCases = [
+          {
+            name: 'kosovo',
+            id: 'XK',
+            alternatives: ['republic of kosovo', 'косово']
+          },
+          {
+            name: 'palestine',
+            id: 'PS',
+            alternatives: ['state of palestine', 'palestinian territories']
+          },
+          {
+            name: 'vatican',
+            id: 'VA',
+            alternatives: ['holy see', 'vatican city', 'vatican city state']
+          },
+          {
+            name: 'taiwan',
+            id: 'TW',
+            alternatives: ['republic of china', 'chinese taipei']
+          },
+          {
+            name: 'guinea-bissau',
+            id: 'GW',
+            alternatives: ['guinea bissau', 'republic of guinea-bissau']
+          }
+        ];
+        
+        // add special cases if they dont already exist
+        specialCases.forEach(special => {
+          const exists = gameCountries.some(c => 
+            c.name === special.name || 
+            c.id === special.id ||
+            c.alternatives.includes(special.name)
+          );
+          
+          if (!exists) {
+            gameCountries.push(special);
+          }
+        });
+        
+        // country name alternatives
+        const additionalAlternatives = {
+          "CI": ["ivory coast"],
+          "CD": ["drc", "congo-kinshasa"],
+          "FM": ["micronesia"],
+          "LA": ["laos"],
+          "MK": ["north macedonia"],
+          "PG": ["papua"],
+          "TL": ["east timor", "timor"]
+        };
+        
+        // adding name alternatives
+        gameCountries = gameCountries.map(country => {
+          if (additionalAlternatives[country.id]) {
+            return {
+              ...country,
+              alternatives: [
+                ...country.alternatives,
+                ...additionalAlternatives[country.id]
+              ]
+            };
+          }
+          return country;
+        });
+        
+        if (gameCountries.length !== 197) {
+          console.warn(`Expected 197 countries, got ${gameCountries.length}`);
+        }
+        
+        setCountries(gameCountries);
       } catch (error) {
         console.error('Error fetching countries:', error);
         setMessage('Error loading countries data');
@@ -54,7 +127,7 @@ const Game = ({ onCorrectGuess, onGameEnd }) => {
 
     if (correctCountry) {
       setGuessedCountries(prev => new Set([...prev, guess]));
-      onCorrectGuess(correctCountry.id); // use ID from our mapping
+      onCorrectGuess(correctCountry.id);
       setMessage('Correct!');
       setIsError(false);
       

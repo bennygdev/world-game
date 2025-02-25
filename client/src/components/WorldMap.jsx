@@ -7,6 +7,57 @@ function WorldMap() {
   const [gameEnded, setGameEnded] = useState(false);
   const [gameStats, setGameStats] = useState(null);
 
+  // Non-playable countries
+  const nonPlayableCountries = [
+    'AW', 'AX', 'BL', 'BQ', 'BV', 'CK', 'CW', 'CX', 'EH', 'FO', 'GF', 
+    'GG', 'GI', 'GL', 'GO', 'GP', 'GS', 'GU', 'HM', 'IM', 'IO', 'JE', 
+    'JU', 'KY', 'MF', 'MO', 'MP', 'MQ', 'MS', 'NC', 'NF', 'NU', 'PF', 
+    'PM', 'PN', 'RE', 'SH', 'SJ', 'SZ', 'TC', 'TF', 'TK', 'UM-DQ', 
+    'UM-FQ', 'UM-HQ', 'UM-JQ', 'UM-MQ', 'UM-WQ', 'VG', 'VI', 'WF', 'YT'
+  ];
+
+  // Regional game modes
+  const northAmericaCountries = [
+    
+    'JM', 'BS', 'BB', 'DM', 'GD', 'AG', 'KN', 
+    'LC', 'VC', 'TT', 'PR'
+  ];
+
+  const southAmericaCountries = [
+    'AR', 'BO', 'BR', 'CL', 'CO', 'EC', 'GY', 'PY', 'PE', 'SR', 
+    'UY', 'VE'
+  ];
+
+  const europeCountries = [
+    'AL', 'AD', 'AT', 'BY', 'BE', 'BA', 'BG', 'HR', 'CY', 'CZ', 
+    'DK', 'EE', 'FI', 'FR', 'DE', 'GR', 'HU', 'IS', 'IE', 'IT', 
+    'LV', 'LI', 'LT', 'LU', 'MK', 'MT', 'MD', 'MC', 'ME', 'NL', 
+    'NO', 'PL', 'PT', 'RO', 'RU', 'SM', 'RS', 'SK', 'SI', 'ES', 
+    'SE', 'CH', 'UA', 'GB', 'VA', 'XK'
+  ];
+
+  const asiaCountries = [
+    'AF', 'AM', 'AZ', 'BH', 'BD', 'BT', 'BN', 'KH', 'CN', 'GE', 
+    'IN', 'ID', 'IR', 'IQ', 'IL', 'JP', 'JO', 'KZ', 'KW', 'KG', 
+    'LA', 'LB', 'MY', 'MV', 'MN', 'MM', 'NP', 'KP', 'OM', 'PK', 
+    'PS', 'PH', 'QA', 'SA', 'SG', 'KR', 'LK', 'SY', 'TW', 'TJ', 
+    'TH', 'TL', 'TR', 'TM', 'AE', 'UZ', 'VN', 'YE'
+  ];
+
+  const africaCountries = [
+    'DZ', 'AO', 'BJ', 'BW', 'BF', 'BI', 'CM', 'CV', 'CF', 'TD', 
+    'KM', 'CD', 'CG', 'CI', 'DJ', 'EG', 'GQ', 'ER', 'ET', 'GA', 
+    'GM', 'GH', 'GN', 'GW', 'KE', 'LS', 'LR', 'LY', 'MG', 'MW', 
+    'ML', 'MR', 'MU', 'MA', 'MZ', 'NA', 'NE', 'NG', 'RW', 'ST', 
+    'SN', 'SC', 'SL', 'SO', 'ZA', 'SS', 'SD', 'TZ', 'TG', 'TN', 
+    'UG', 'ZM', 'ZW'
+  ];
+
+  const oceaniaCountries = [
+    'AU', 'FJ', 'KI', 'MH', 'FM', 'NR', 'NZ', 'PW', 'PG', 'WS', 
+    'SB', 'TO', 'TV', 'VU'
+  ];
+
   const handleCorrectGuess = (countryCode) => {
     console.log('Trying to find country:', countryCode);
     const path = d3.select(svgRef.current)
@@ -34,6 +85,40 @@ function WorldMap() {
 
     const svg = d3.select(svgRef.current);
 
+    // grey out non-playable countries
+    nonPlayableCountries.forEach(countryCode => {
+      const path = svg.select(`#${countryCode}`);
+      if (path.node()) {
+        path
+          .style('fill', '#d1d5db') // grey color
+          .style('cursor', 'default')
+          .on('mouseenter', null)
+          .on('mouseleave', null);
+      }
+    });
+
+    // set up remaining countries
+    svg
+      .selectAll('path')
+      .filter(function() {
+        // Skip already greyed out countries
+        const id = d3.select(this).attr('id');
+        return !nonPlayableCountries.includes(id);
+      })
+      .style('fill', '#fff')
+      .style('stroke', '#ccc')
+      .style('stroke-width', '0.5')
+      .on('mouseenter', function () {
+        if (!gameEnded) {
+          d3.select(this).style('fill', '#ccc').style('cursor', 'pointer');
+        }
+      })
+      .on('mouseleave', function () {
+        if (!gameEnded && d3.select(this).style('fill') !== 'rgb(74, 222, 128)') {
+          d3.select(this).style('fill', '#fff');
+        }
+      });
+
     // zoom behavior
     const zoom = d3
       .zoom()
@@ -49,21 +134,21 @@ function WorldMap() {
     });
 
     // hover effect
-    svg
-      .selectAll('path')
-      .style('fill', '#fff')
-      .style('stroke', '#ccc')
-      .style('stroke-width', '0.5')
-      .on('mouseenter', function () {
-        if (!gameEnded) {
-          d3.select(this).style('fill', '#ccc').style('cursor', 'pointer');
-        }
-      })
-      .on('mouseleave', function () {
-        if (!gameEnded && d3.select(this).style('fill') !== 'rgb(74, 222, 128)') {
-          d3.select(this).style('fill', '#fff');
-        }
-      });
+    // svg
+    //   .selectAll('path')
+    //   .style('fill', '#fff')
+    //   .style('stroke', '#ccc')
+    //   .style('stroke-width', '0.5')
+    //   .on('mouseenter', function () {
+    //     if (!gameEnded) {
+    //       d3.select(this).style('fill', '#ccc').style('cursor', 'pointer');
+    //     }
+    //   })
+    //   .on('mouseleave', function () {
+    //     if (!gameEnded && d3.select(this).style('fill') !== 'rgb(74, 222, 128)') {
+    //       d3.select(this).style('fill', '#fff');
+    //     }
+    //   });
 
     const handleResize = () => {
       const width = svg.node().parentNode.clientWidth;

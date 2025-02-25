@@ -1,10 +1,6 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './hooks/Auth';
 import Home from './pages/Home';
-import LoginPage from './pages/Login';
-import RegisterPage from './pages/Register';
-import Leaderboard from './pages/Leaderboard';
-import UserStats from './pages/UserStats';
 
 function App() {
   return (
@@ -12,10 +8,7 @@ function App() {
       <AuthProvider>
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/leaderboard" element={<Leaderboard />} />
-          <Route path="/stats" element={<UserStats />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </AuthProvider>
     </Router>
