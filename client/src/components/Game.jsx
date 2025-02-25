@@ -9,10 +9,27 @@ const Game = ({ onCorrectGuess, onGameEnd }) => {
   const [isError, setIsError] = useState(false);
   const [showGiveUpModal, setShowGiveUpModal] = useState(false);
   const [gameOver, setGameOver] = useState(false);
+  const [showMessage, setShowMessage] = useState(false);
   
   useEffect(() => {
     fetchCountries();
   }, []);
+  
+  // msg display
+  useEffect(() => {
+    let timer;
+    if (message) {
+      setShowMessage(true);
+      timer = setTimeout(() => {
+        setShowMessage(false);
+        setTimeout(() => setMessage(''), 300);
+      }, 3000);
+    }
+    
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [message]);
 
   const fetchCountries = async () => {
     try {
@@ -206,7 +223,7 @@ const Game = ({ onCorrectGuess, onGameEnd }) => {
 
   return (
     <>
-      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 w-full max-w-md px-4">
+      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 w-full max-w-lg px-4">
         <div className="bg-white rounded-lg shadow-lg p-4 space-y-4">
           <div className="flex items-center gap-2">
             <input
@@ -244,20 +261,23 @@ const Game = ({ onCorrectGuess, onGameEnd }) => {
             )}
           </div>
           
+          {/* Message with fade animation */}
+          <div className="h-4 flex">
+            {message && (
+              <p 
+                className={`text-sm transition-opacity duration-300 ${
+                  isError ? 'text-red-600' : 'text-green-600'
+                } ${showMessage ? 'opacity-100' : 'opacity-0'}`}
+              >
+                {message}
+              </p>
+            )}
+          </div>
+          
           <div className="flex justify-between text-sm text-gray-600">
             <span>Guessed: {guessedCountries.size}</span>
             <span>Remaining: {countries.length - guessedCountries.size}</span>
           </div>
-          
-          {message && (
-            <div className={`p-4 rounded-lg ${
-              isError 
-                ? 'bg-red-100 text-red-700 border border-red-200' 
-                : 'bg-green-100 text-green-700 border border-green-200'
-            }`}>
-              {message}
-            </div>
-          )}
         </div>
       </div>
   
