@@ -1,65 +1,103 @@
 import { useState, useEffect, useRef } from 'react';
 import * as d3 from 'd3';
 import Game from './Game';
+import RegionalGuessesPanel from './RegionalGuessesPanel';
+import { useAuth } from '../hooks/Auth';
 
 function WorldMap() {
+  const { user } = useAuth();
   const svgRef = useRef(null);
   const [gameEnded, setGameEnded] = useState(false);
   const [gameStats, setGameStats] = useState(null);
+  const [correctGuesses, setCorrectGuesses] = useState([]);
+  const [missedCountries, setMissedCountries] = useState([]);
+  const [countryNameMapping, setCountryNameMapping] = useState({});
 
   // Non-playable countries
   const nonPlayableCountries = [
-    'AW', 'AX', 'BL', 'BQ', 'BV', 'CK', 'CW', 'CX', 'EH', 'FO', 'GF', 
-    'GG', 'GI', 'GL', 'GO', 'GP', 'GS', 'GU', 'HM', 'IM', 'IO', 'JE', 
-    'JU', 'KY', 'MF', 'MO', 'MP', 'MQ', 'MS', 'NC', 'NF', 'NU', 'PF', 
-    'PM', 'PN', 'RE', 'SH', 'SJ', 'SZ', 'TC', 'TF', 'TK', 'UM-DQ', 
-    'UM-FQ', 'UM-HQ', 'UM-JQ', 'UM-MQ', 'UM-WQ', 'VG', 'VI', 'WF', 'YT'
+
+    // Territories, dependencies and special regions
+    'AW', 'AX', 'AI', 'AS', 'BL', 'BM', 'BQ', 'BV', 'CC', 'CK', 'CW', 'CX', 
+    'EH', 'FK', 'FO', 'GF', 'GG', 'GI', 'GL', 'GP', 'GS', 'GU', 'HK', 'HM', 
+    'IM', 'IO', 'JE', 'KY', 'MF', 'MO', 'MP', 'MQ', 'MS', 'NC', 'NF', 'NU', 
+    'PF', 'PM', 'PN', 'PR', 'RE', 'SH', 'SJ', 'SX', 'TC', 'TF', 'TK', 'UM-DQ', 
+    'UM-FQ', 'UM-HQ', 'UM-JQ', 'UM-MQ', 'UM-WQ', 'VG', 'VI', 'WF', 'YT',
+
+    // Non-UN recognized or disputed territories
+    'GO', 'JU'
   ];
 
   // Regional game modes
   const northAmericaCountries = [
-    
-    'JM', 'BS', 'BB', 'DM', 'GD', 'AG', 'KN', 
-    'LC', 'VC', 'TT', 'PR'
+    'CA', 'US', 'MX', // Main countries
+    'BZ', 'CR', 'CU', 'DO', 'GT', 'HN', 'HT', 'NI', 'PA', 'SV', // Central America
+    'AG', 'BB', 'BS', 'DM', 'GD', 'JM', 'KN', 'LC', 'TT', 'VC' // Caribbean islands (independent countries only)
   ];
 
   const southAmericaCountries = [
-    'AR', 'BO', 'BR', 'CL', 'CO', 'EC', 'GY', 'PY', 'PE', 'SR', 
-    'UY', 'VE'
+    'AR', 'BO', 'BR', 'CL', 'CO', 'EC', 'GY', 'PE', 'PY', 'SR', 'UY', 'VE'
   ];
 
   const europeCountries = [
-    'AL', 'AD', 'AT', 'BY', 'BE', 'BA', 'BG', 'HR', 'CY', 'CZ', 
-    'DK', 'EE', 'FI', 'FR', 'DE', 'GR', 'HU', 'IS', 'IE', 'IT', 
-    'LV', 'LI', 'LT', 'LU', 'MK', 'MT', 'MD', 'MC', 'ME', 'NL', 
-    'NO', 'PL', 'PT', 'RO', 'RU', 'SM', 'RS', 'SK', 'SI', 'ES', 
-    'SE', 'CH', 'UA', 'GB', 'VA', 'XK'
+    'AD', 'AL', 'AT', 'BA', 'BE', 'BG', 'BY', 'CH', 'CY', 'CZ', 
+    'DE', 'DK', 'EE', 'ES', 'FI', 'FR', 'GB', 'GR', 'HR', 'HU', 
+    'IE', 'IS', 'IT', 'LI', 'LT', 'LU', 'LV', 'MC', 'MD', 'ME', 
+    'MK', 'MT', 'NL', 'NO', 'PL', 'PT', 'RO', 'RS', 'RU', 'SE', 
+    'SI', 'SK', 'SM', 'UA', 'VA', 'XK'
   ];
 
   const asiaCountries = [
-    'AF', 'AM', 'AZ', 'BH', 'BD', 'BT', 'BN', 'KH', 'CN', 'GE', 
-    'IN', 'ID', 'IR', 'IQ', 'IL', 'JP', 'JO', 'KZ', 'KW', 'KG', 
-    'LA', 'LB', 'MY', 'MV', 'MN', 'MM', 'NP', 'KP', 'OM', 'PK', 
-    'PS', 'PH', 'QA', 'SA', 'SG', 'KR', 'LK', 'SY', 'TW', 'TJ', 
-    'TH', 'TL', 'TR', 'TM', 'AE', 'UZ', 'VN', 'YE'
+    'AE', 'AF', 'AM', 'AZ', 'BD', 'BH', 'BN', 'BT', 'CN', 'GE', 
+    'ID', 'IL', 'IN', 'IQ', 'IR', 'JO', 'JP', 'KG', 'KH', 'KP', 
+    'KR', 'KW', 'KZ', 'LA', 'LB', 'LK', 'MM', 'MN', 'MV', 'MY', 
+    'NP', 'OM', 'PH', 'PK', 'PS', 'QA', 'SA', 'SG', 'SY', 'TH', 
+    'TJ', 'TL', 'TM', 'TW', 'UZ', 'VN', 'YE', 'TR'
   ];
 
   const africaCountries = [
-    'DZ', 'AO', 'BJ', 'BW', 'BF', 'BI', 'CM', 'CV', 'CF', 'TD', 
-    'KM', 'CD', 'CG', 'CI', 'DJ', 'EG', 'GQ', 'ER', 'ET', 'GA', 
-    'GM', 'GH', 'GN', 'GW', 'KE', 'LS', 'LR', 'LY', 'MG', 'MW', 
-    'ML', 'MR', 'MU', 'MA', 'MZ', 'NA', 'NE', 'NG', 'RW', 'ST', 
-    'SN', 'SC', 'SL', 'SO', 'ZA', 'SS', 'SD', 'TZ', 'TG', 'TN', 
-    'UG', 'ZM', 'ZW'
+    'AO', 'BF', 'BI', 'BJ', 'BW', 'CD', 'CF', 'CG', 'CI', 'CM', 
+    'CV', 'DJ', 'DZ', 'EG', 'ER', 'ET', 'GA', 'GH', 'GM', 'GN', 
+    'GQ', 'GW', 'KE', 'KM', 'LR', 'LS', 'LY', 'MA', 'MG', 'ML', 
+    'MR', 'MU', 'MW', 'MZ', 'NA', 'NE', 'NG', 'RW', 'SC', 'SD', 
+    'SL', 'SN', 'SO', 'SS', 'ST', 'SZ', 'TD', 'TG', 'TN', 'TZ', 
+    'UG', 'ZA', 'ZM', 'ZW'
   ];
 
   const oceaniaCountries = [
-    'AU', 'FJ', 'KI', 'MH', 'FM', 'NR', 'NZ', 'PW', 'PG', 'WS', 
-    'SB', 'TO', 'TV', 'VU'
+    'AU', 'FJ', 'FM', 'KI', 'MH', 'NR', 'NZ', 'PG', 'PW', 'SB', 
+    'TO', 'TV', 'VU', 'WS'
   ];
+
+  const continentData = {
+    "North America": northAmericaCountries,
+    "South America": southAmericaCountries,
+    "Europe": europeCountries,
+    "Asia": asiaCountries,
+    "Africa": africaCountries,
+    "Oceania": oceaniaCountries
+  };
+  
+  // country name map from 2 letter code to title for each path
+  useEffect(() => {
+    if (!svgRef.current) return;
+    const mapping = {};
+    d3.select(svgRef.current)
+      .selectAll('path')
+      .each(function () {
+        const code = d3.select(this).attr('id');
+        const title = d3.select(this).attr('title');
+        if (code && title) {
+          mapping[code] = title;
+        }
+      });
+    setCountryNameMapping(mapping);
+  }, [svgRef.current]);
 
   const handleCorrectGuess = (countryCode) => {
     console.log('Trying to find country:', countryCode);
+
+    setCorrectGuesses(prev => [...prev, countryCode]);
+
     const path = d3.select(svgRef.current)
       .select(`#${countryCode}`); // remove 'path' from selector
     
@@ -67,6 +105,7 @@ function WorldMap() {
       console.log('Found country path, updating color');
       path
         .style('fill', '#4ade80') // color fill when correct
+        .style('stroke', '#ccc')
         .style('cursor', 'default')
         .on('mouseenter', null)
         .on('mouseleave', null);
@@ -78,6 +117,48 @@ function WorldMap() {
   const handleGameEnd = (stats) => {
     setGameEnded(true);
     setGameStats(stats);
+
+    // get missed countries
+    const allCountryCodes = Object.values(continentData).flat();
+    const missed = allCountryCodes.filter(code => !correctGuesses.includes(code));
+    setMissedCountries(missed); // store missed countries
+
+    // color missed countries red
+    missed.forEach(countryCode => {
+      const path = d3.select(svgRef.current).select(`#${countryCode}`);
+      if (path.node()) {
+        path.style('fill', '#f87171')
+        .on('mouseenter', null)
+        .on('mouseleave', null);
+      }
+    });
+  };
+
+  const resetGame = () => {
+    setCorrectGuesses([]);
+    setMissedCountries([]);
+    setGameEnded(false);
+    setGameStats(null);
+    
+    // reset the map colors
+    const svg = d3.select(svgRef.current);
+    
+    // reset playable countries
+    svg
+      .selectAll('path')
+      .filter(function() {
+        const id = d3.select(this).attr('id');
+        return !nonPlayableCountries.includes(id);
+      })
+      .style('fill', '#fff')
+      .style('stroke', '#ccc')
+      .style('stroke-width', '0.5')
+      .on('mouseenter', function () {
+        d3.select(this).style('fill', '#ccc').style('cursor', 'pointer');
+      })
+      .on('mouseleave', function () {
+        d3.select(this).style('fill', '#fff');
+      });
   };
 
   useEffect(() => {
@@ -163,7 +244,7 @@ function WorldMap() {
       svg.on('.zoom', null);
       window.removeEventListener('resize', handleResize);
     };
-  }, [gameEnded]);
+  }, []);
 
   return (
     <>
@@ -1460,7 +1541,7 @@ function WorldMap() {
         </svg>
 
         {gameEnded && gameStats && (
-          <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-50">
             <div className="bg-white p-6 rounded-lg shadow-lg text-center">
               <h2 className="text-2xl font-bold mb-4">
                 Game Over!
@@ -1468,25 +1549,34 @@ function WorldMap() {
               <p className="mb-2">
                 You correctly guessed {gameStats.correctGuesses} out of {gameStats.totalCountries} countries
               </p>
-              <p className="mb-4">
+              <p className="mb-2">
                 Score: {Math.round((gameStats.correctGuesses / gameStats.totalCountries) * 100)}%
               </p>
+              <p className="mb-4">
+                {user ? '' : 'Please register an account or login to save your progress.' }
+              </p>
               <button
-                onClick={() => window.location.reload()}
+                onClick={() => setGameEnded(false)} // just hide the modal dont reset
                 className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
               >
-                Play Again
+                Continue
               </button>
             </div>
           </div>
         )}
         
-        {!gameEnded && (
-          <Game
-            onCorrectGuess={handleCorrectGuess}
-            onGameEnd={handleGameEnd}
-          />
-        )}
+        <RegionalGuessesPanel 
+          continentData={continentData} 
+          correctGuesses={correctGuesses} 
+          missedCountries={missedCountries} 
+          countryNameMapping={countryNameMapping} 
+        />
+
+        {/* game will handle display logic bruh */}
+        <Game
+          onCorrectGuess={handleCorrectGuess}
+          onGameEnd={handleGameEnd}
+        />
       </div>
     </>
   );

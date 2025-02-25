@@ -11,7 +11,7 @@ export default function LoginModal({ onClose, onRegisterClick }) {
   // const navigate = useNavigate();
 
   useEffect(() => {
-    // Start animation after component mounts
+    // start animation after component mounts
     const timer = setTimeout(() => setIsVisible(true), 10);
     return () => clearTimeout(timer);
   }, []);
@@ -23,6 +23,7 @@ export default function LoginModal({ onClose, onRegisterClick }) {
     const result = await login(username, password);
     if (result.success) {
       onClose();
+      window.location.reload();
     } else {
       setError(result.error);
     }
@@ -30,7 +31,7 @@ export default function LoginModal({ onClose, onRegisterClick }) {
 
   const handleClose = () => {
     setIsVisible(false);
-    setTimeout(onClose, 300); // Wait for animation to complete
+    setTimeout(onClose, 300); // wait
   };
 
   return (
