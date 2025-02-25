@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import GiveUpConfirmModal from './modals/GiveUpConfirmModal';
 
-const Game = ({ onCorrectGuess, onGameEnd }) => {
+function Game({ onCorrectGuess, onGameEnd }) {
   const [countries, setCountries] = useState([]);
   const [guessedCountries, setGuessedCountries] = useState(new Set());
   const [input, setInput] = useState('');

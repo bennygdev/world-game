@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/Auth';
 
-export default function RegisterModal({ onClose, onLoginClick }) {
+function RegisterModal({ onClose, onLoginClick }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -40,6 +40,7 @@ export default function RegisterModal({ onClose, onLoginClick }) {
         setError(result.error);
       }
     } catch (err) {
+      console.log(err)
       setError('An unexpected error occurred');
     } finally {
       setIsLoading(false);
@@ -134,3 +135,5 @@ export default function RegisterModal({ onClose, onLoginClick }) {
     </div>
   );
 }
+
+export default RegisterModal;

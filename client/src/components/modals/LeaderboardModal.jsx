@@ -3,7 +3,7 @@ import axios from 'axios';
 import { FaTrophy } from 'react-icons/fa';
 import { useAuth } from '../../hooks/Auth';
 
-export default function LeaderboardModal({ onClose }) {
+function LeaderboardModal({ onClose }) {
   const [leaderboard, setLeaderboard] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -184,3 +184,5 @@ export default function LeaderboardModal({ onClose }) {
     </div>
   );
 }
+
+export default LeaderboardModal;

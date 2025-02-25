@@ -1,7 +1,7 @@
 import { useAuth } from '../hooks/Auth';
 import { FaTrophy, FaChartBar, FaSignOutAlt, FaUser } from 'react-icons/fa';
 
-export default function FloatingButtons({ 
+function FloatingButtons({ 
   onLoginClick, 
   // onRegisterClick, 
   onLeaderboardClick, 
@@ -49,3 +49,5 @@ export default function FloatingButtons({
     </div>
   );
 }
+
+export default FloatingButtons;

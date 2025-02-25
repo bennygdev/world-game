@@ -1,11 +1,9 @@
-import React from 'react';
-
-const RegionalGuessesPanel = ({ 
+function RegionalGuessesPanel({ 
   continentData, 
   correctGuesses, 
   missedCountries, 
   countryNameMapping 
-}) => {
+}) {
   return (
     <div className="absolute bottom-4 left-4 bg-white p-4 rounded shadow-lg w-80 max-h-[50vh] overflow-auto">
       <div className="pb-2 mb-2">

@@ -8,7 +8,7 @@ import OnboardingModal from '../components/modals/OnboardingModal';
 import LogoCard from '../components/LogoCard';
 import FloatingButtons from '../components/FloatingButtons';
 
-export default function Home() {
+function Home() {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [showLeaderboardModal, setShowLeaderboardModal] = useState(false);
@@ -99,3 +99,5 @@ export default function Home() {
     </div>
   );
 }
+
+export default Home;

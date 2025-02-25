@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/Auth';
 import axios from 'axios';
 
-export default function UserStatsModal({ onClose }) {
+function UserStatsModal({ onClose }) {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -111,3 +111,5 @@ export default function UserStatsModal({ onClose }) {
     </div>
   );
 }
+
+export default UserStatsModal;

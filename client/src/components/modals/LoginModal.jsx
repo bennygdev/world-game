@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/Auth';
 // import { useNavigate } from 'react-router-dom';
 
-export default function LoginModal({ onClose, onRegisterClick }) {
+function LoginModal({ onClose, onRegisterClick }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -38,6 +38,7 @@ export default function LoginModal({ onClose, onRegisterClick }) {
         setError(result.error);
       }
     } catch (err) {
+      console.log(err)
       setError('An unexpected error occurred');
     } finally {
       setIsLoading(false);
@@ -128,3 +129,5 @@ export default function LoginModal({ onClose, onRegisterClick }) {
     </div>
   );
 }
+
+export default LoginModal;
