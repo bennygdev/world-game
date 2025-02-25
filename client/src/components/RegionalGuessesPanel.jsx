@@ -7,7 +7,10 @@ const RegionalGuessesPanel = ({
   countryNameMapping 
 }) => {
   return (
-    <div className="absolute bottom-4 left-4 bg-white p-4 rounded shadow-lg w-90 max-h-[50vh] overflow-auto">
+    <div className="absolute bottom-4 left-4 bg-white p-4 rounded shadow-lg w-80 max-h-[50vh] overflow-auto">
+      <div className="pb-2 mb-2">
+        <h2 className="text-xl font-bold">Guessed Countries</h2>
+      </div>
       {Object.entries(continentData).map(([continent, countryCodes]) => {
         const guessedNames = countryCodes
           .filter(code => correctGuesses.includes(code))

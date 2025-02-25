@@ -84,7 +84,8 @@ const Game = ({ onCorrectGuess, onGameEnd }) => {
         "LA": ["laos"],
         "MK": ["north macedonia"],
         "PG": ["papua"],
-        "TL": ["east timor", "timor"]
+        "TL": ["east timor", "timor", "timor leste"],
+        "CZ": ["czech", "czech republic"],
       };
       
       // adding name alternatives

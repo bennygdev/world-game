@@ -7,6 +7,7 @@ export default function LoginModal({ onClose, onRegisterClick }) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isVisible, setIsVisible] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
   // const navigate = useNavigate();
 
@@ -20,12 +21,26 @@ export default function LoginModal({ onClose, onRegisterClick }) {
     e.preventDefault();
     setError('');
     
-    const result = await login(username, password);
-    if (result.success) {
-      onClose();
-      window.location.reload();
-    } else {
-      setError(result.error);
+    // very simple client-side validation
+    if (!username || !password) {
+      setError('Please enter both username and password');
+      return;
+    }
+    
+    setIsLoading(true);
+    
+    try {
+      const result = await login(username, password);
+      if (result.success) {
+        onClose();
+        window.location.reload();
+      } else {
+        setError(result.error);
+      }
+    } catch (err) {
+      setError('An unexpected error occurred');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -60,7 +75,11 @@ export default function LoginModal({ onClose, onRegisterClick }) {
         
         <h2 className="text-2xl font-bold text-center mb-6">Login</h2>
         
-        {error && <p className="text-red-500 text-center mb-4">{error}</p>}
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
+            {error}
+          </div>
+        )}
         
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -87,9 +106,10 @@ export default function LoginModal({ onClose, onRegisterClick }) {
           
           <button
             type="submit"
-            className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-md"
+            className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-md disabled:bg-blue-300"
+            disabled={isLoading}
           >
-            Login
+            {isLoading ? 'Logging in...' : 'Login'}
           </button>
         </form>
         

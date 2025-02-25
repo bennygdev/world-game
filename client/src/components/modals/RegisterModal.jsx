@@ -6,6 +6,7 @@ export default function RegisterModal({ onClose, onLoginClick }) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isVisible, setIsVisible] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const { register } = useAuth();
 
   useEffect(() => {
@@ -18,11 +19,30 @@ export default function RegisterModal({ onClose, onLoginClick }) {
     e.preventDefault();
     setError('');
     
-    const result = await register(username, password);
-    if (result.success) {
-      onLoginClick(); // redirect to login modal after successful registration
-    } else {
-      setError(result.error);
+    // yes, very very simple lient-side validation
+    if (username.length < 3) {
+      setError('Username must be at least 3 characters long');
+      return;
+    }
+    
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters long');
+      return;
+    }
+    
+    setIsLoading(true);
+    
+    try {
+      const result = await register(username, password);
+      if (result.success) {
+        onLoginClick(); // redirect to login modal after successful registration
+      } else {
+        setError(result.error);
+      }
+    } catch (err) {
+      setError('An unexpected error occurred');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -57,7 +77,11 @@ export default function RegisterModal({ onClose, onLoginClick }) {
         
         <h2 className="text-2xl font-bold text-center mb-6">Register</h2>
         
-        {error && <p className="text-red-500 text-center mb-4">{error}</p>}
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
+            {error}
+          </div>
+        )}
         
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -68,7 +92,9 @@ export default function RegisterModal({ onClose, onLoginClick }) {
               onChange={(e) => setUsername(e.target.value)}
               className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
               required
+              minLength="3"
             />
+            <p className="mt-1 text-xs text-gray-500">Must be at least 3 characters long and unique</p>
           </div>
           
           <div>
@@ -79,14 +105,17 @@ export default function RegisterModal({ onClose, onLoginClick }) {
               onChange={(e) => setPassword(e.target.value)}
               className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
               required
+              minLength="6"
             />
+            <p className="mt-1 text-xs text-gray-500">Must be at least 6 characters long</p>
           </div>
           
           <button
             type="submit"
-            className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-md"
+            className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-md disabled:bg-blue-300"
+            disabled={isLoading}
           >
-            Register
+            {isLoading ? 'Registering...' : 'Register'}
           </button>
         </form>
         

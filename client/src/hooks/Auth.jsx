@@ -29,9 +29,25 @@ export const AuthProvider = ({ children }) => {
       setUser(user);
       return { success: true };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.error || 'Failed to login' 
+      console.error('Login error:', error);
+      
+      if (error.response) {
+        // server responded with a status code
+        return { 
+          success: false, 
+          error: error.response.data.error || 'Failed to login'
+        };
+      } else if (error.request) {
+        // no response was received
+        return {
+          success: false,
+          error: 'No response from server. Please check your connection and try again.'
+        };
+      } else {
+        return {
+          success: false,
+          error: 'An error occurred while trying to log in.'
+        };
       };
     }
   };
@@ -44,10 +60,26 @@ export const AuthProvider = ({ children }) => {
       });
       return { success: true, user: response.data.user };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.error || 'Failed to register' 
-      };
+      console.error('Registration error:', error);
+      
+      if (error.response) {
+        // server responded with a status code
+        return { 
+          success: false, 
+          error: error.response.data.error || 'Failed to register'
+        };
+      } else if (error.request) {
+        // no response was received
+        return {
+          success: false,
+          error: 'No response from server. Please check your connection and try again.'
+        };
+      } else {
+        return {
+          success: false,
+          error: 'An error occurred while trying to register.'
+        };
+      }
     }
   };
 
