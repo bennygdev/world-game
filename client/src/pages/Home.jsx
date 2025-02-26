@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import WorldMap from '../components/WorldMap';
+import Menu from '../components/Menu';
 import LoginModal from '../components/modals/LoginModal';
 import RegisterModal from '../components/modals/RegisterModal';
 import LeaderboardModal from '../components/modals/LeaderboardModal';
@@ -9,6 +10,8 @@ import LogoCard from '../components/LogoCard';
 import FloatingButtons from '../components/FloatingButtons';
 
 function Home() {
+  const [mode, setMode] = useState('World');
+  const [gameKey, setGameKey] = useState(0)
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [showLeaderboardModal, setShowLeaderboardModal] = useState(false);
@@ -22,6 +25,11 @@ function Home() {
       setShowOnboardingModal(true);
     }
   }, []);
+
+  // reset the game when mode changes
+  useEffect(() => {
+    setGameKey(prevKey => prevKey + 1);
+  }, [mode]);
 
   const openLoginModal = () => {
     closeAllModals();
@@ -67,8 +75,10 @@ function Home() {
         onStatsClick={openStatsModal}
       />
       
+      <Menu mode={mode} setMode={setMode} />
+
       <main className="flex-1 relative">
-        <WorldMap />
+        <WorldMap key={gameKey} mode={mode} />
       </main>
 
       {showLoginModal && (

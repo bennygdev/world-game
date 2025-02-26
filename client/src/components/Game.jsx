@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import GiveUpConfirmModal from './modals/GiveUpConfirmModal';
 
-function Game({ onCorrectGuess, onGameEnd }) {
+function Game({ onCorrectGuess, onGameEnd, mode, onResetGame }) {
   const [countries, setCountries] = useState([]);
   const [guessedCountries, setGuessedCountries] = useState(new Set());
   const [input, setInput] = useState('');
@@ -11,9 +11,23 @@ function Game({ onCorrectGuess, onGameEnd }) {
   const [gameOver, setGameOver] = useState(false);
   const [showMessage, setShowMessage] = useState(false);
   
+  const asiaCountries = [
+    'AE', 'AF', 'AM', 'AZ', 'BD', 'BH', 'BN', 'BT', 'CN', 'GE', 
+    'ID', 'IL', 'IN', 'IQ', 'IR', 'JO', 'JP', 'KG', 'KH', 'KP', 
+    'KR', 'KW', 'KZ', 'LA', 'LB', 'LK', 'MM', 'MN', 'MV', 'MY', 
+    'NP', 'OM', 'PH', 'PK', 'PS', 'QA', 'SA', 'SG', 'SY', 'TH', 
+    'TJ', 'TL', 'TM', 'TW', 'UZ', 'VN', 'YE', 'TR'
+  ];
+
+  // when mode changes reset game state and fetch countries accordingly
   useEffect(() => {
+    setGuessedCountries(new Set());
+    setInput('');
+    setMessage('');
+    setIsError(false);
+    setGameOver(false);
     fetchCountries();
-  }, []);
+  }, [mode]);
   
   // msg display
   useEffect(() => {
@@ -37,15 +51,13 @@ function Game({ onCorrectGuess, onGameEnd }) {
       const data = await response.json();
       
       // filter for UN member states
-      let gameCountries = data.filter(country => 
-        country.unMember === true
-      ).map(country => ({
+      let gameCountries = data.filter(country => country.unMember === true).map(country => ({
         name: country.name.common.toLowerCase(),
         id: country.cca2,
         alternatives: [
           ...(country.altSpellings || []).map(s => s.toLowerCase()),
-          ...(country.name.nativeName ? 
-            Object.values(country.name.nativeName).map(n => n.common.toLowerCase())
+          ...(country.name.nativeName
+            ? Object.values(country.name.nativeName).map(n => n.common.toLowerCase())
             : []
           )
         ]
@@ -118,8 +130,13 @@ function Game({ onCorrectGuess, onGameEnd }) {
         }
         return country;
       });
+
+      if (mode === 'Asia') {
+        // only countries that are in the asia list
+        gameCountries = gameCountries.filter(country => asiaCountries.includes(country.id));
+      }
       
-      if (gameCountries.length !== 197) {
+      if (mode !== 'Asia' && gameCountries.length !== 197) {
         console.warn(`Expected 197 countries, got ${gameCountries.length}`);
       }
       
@@ -147,13 +164,18 @@ function Game({ onCorrectGuess, onGameEnd }) {
     );
 
     if (correctCountry) {
-      setGuessedCountries(prev => new Set([...prev, guess]));
+      const newGuessed = new Set(guessedCountries);
+      newGuessed.add(guess);
+      setGuessedCountries(newGuessed);
       onCorrectGuess(correctCountry.id);
       setMessage('Correct!');
       setIsError(false);
       
-      if (guessedCountries.size + 1 === countries.length) {
-        handleGameEnd(true);
+      // calculate new count
+      const newSize = newGuessed.size;
+      if (newSize === countries.length) {
+        // all countries have been guessed then win
+        handleGameEnd(true, newSize);
       }
     } else {
       setMessage('Not a recognized country');
@@ -176,15 +198,15 @@ function Game({ onCorrectGuess, onGameEnd }) {
     handleGameEnd(false);
   };
 
-  const handleGameEnd = async (completed) => {
+  const handleGameEnd = async (completed, finalSize = guessedCountries.size) => {
     const stats = {
       completed,
-      correctGuesses: guessedCountries.size,
-      totalCountries: countries.length
+      correctGuesses: finalSize,
+      totalCountries: countries.length,
+      isWinner: completed && finalSize === countries.length
     };
-  
+
     const user = localStorage.getItem('userData');
-    
     if (user) {
       try {
         const token = localStorage.getItem('token');
@@ -195,15 +217,13 @@ function Game({ onCorrectGuess, onGameEnd }) {
             'Authorization': `Bearer ${token}`
           },
           body: JSON.stringify({
-            game_mode: 'World',
-            score: guessedCountries.size
+            game_mode: mode,
+            score: finalSize
           }),
         });
-        
         if (!response.ok) throw new Error('Failed to save stats');
       } catch (error) {
         console.error('Error saving game stats:', error);
-        // continue to show modal even if save fails
       }
     }
     
@@ -217,8 +237,11 @@ function Game({ onCorrectGuess, onGameEnd }) {
     setMessage('');
     setIsError(false);
     setGameOver(false);
+
+    onResetGame();
     
-    window.location.reload(); // reset everything
+    //window.location.reload(); // reset everything
+    fetchCountries();
   };
 
   return (

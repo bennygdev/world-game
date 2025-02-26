@@ -4,7 +4,7 @@ import Game from './Game';
 import RegionalGuessesPanel from './RegionalGuessesPanel';
 import { useAuth } from '../hooks/Auth';
 
-function WorldMap() {
+function WorldMap({ mode }) {
   const { user } = useAuth();
   const svgRef = useRef(null);
   const [gameEnded, setGameEnded] = useState(false);
@@ -12,6 +12,7 @@ function WorldMap() {
   const [correctGuesses, setCorrectGuesses] = useState([]);
   const [missedCountries, setMissedCountries] = useState([]);
   const [countryNameMapping, setCountryNameMapping] = useState({});
+  const [gameKey, setGameKey] = useState(0);
 
   // Non-playable countries
   const nonPlayableCountries = [
@@ -77,6 +78,80 @@ function WorldMap() {
     "Oceania": oceaniaCountries
   };
   
+  // existing d3 initialization and zoom setup
+  useEffect(() => {
+    if (!svgRef.current) return;
+    const svg = d3.select(svgRef.current);
+
+    const zoom = d3.zoom()
+      .scaleExtent([1, 16])
+      .on('zoom', (event) => {
+        svg.select('g').attr('transform', event.transform);
+      });
+
+    svg.call(zoom);
+    
+    const handleResize = () => {
+      const width = svg.node().parentNode.clientWidth;
+      const height = svg.node().parentNode.clientHeight;
+      svg.attr('width', width).attr('height', height);
+    };
+
+    window.addEventListener('resize', handleResize);
+    handleResize();
+
+    return () => {
+      svg.on('.zoom', null);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
+  // update map zoom when mode changes
+  useEffect(() => {
+    if (!svgRef.current) return;
+    const svg = d3.select(svgRef.current);
+    // new zoom instance for the transformation transition
+    const zoomTransition = d3.zoom()
+      .scaleExtent([1, 16])
+      .on('zoom', (event) => {
+        svg.select('g').attr('transform', event.transform);
+      });
+    
+    if (mode === 'Asia') {
+      // NOTE: This is not fully fixed yet... lol bruh why are you reading my commits????
+      // For demonstration, use a fixed translation and scale.
+      // In a real implementation calculate the proper bounding box for asia
+      svg.transition().duration(750).call(
+        zoomTransition.transform,
+        d3.zoomIdentity.translate(-1400, -680).scale(2.5)
+      );
+      // exclude non asian countries
+      svg.selectAll('path')
+        .filter(function() {
+          const id = d3.select(this).attr('id');
+          return !asiaCountries.includes(id);
+        })
+        .style('fill', '#dedede')
+        .on('mouseenter', null)
+        .on('mouseleave', null);
+    } else if (mode === 'World') {
+      // reset zoom and country colors
+      svg.transition().duration(750).call(
+        zoomTransition.transform,
+        d3.zoomIdentity
+      );
+      svg.selectAll('path')
+        .style('fill', '#fff');
+    }
+    
+    // reset game state when mode changes
+    setCorrectGuesses([]);
+    setMissedCountries([]);
+    setGameEnded(false);
+    setGameStats(null);
+    resetMapColors();
+  }, [mode]);
+
   // country name map from 2 letter code to title for each path
   useEffect(() => {
     if (!svgRef.current) return;
@@ -105,7 +180,7 @@ function WorldMap() {
       console.log('Found country path, updating color');
       path
         .style('fill', '#4ade80') // color fill when correct
-        .style('stroke', '#ccc')
+        .style('stroke', '#648592')
         .style('cursor', 'default')
         .on('mouseenter', null)
         .on('mouseleave', null);
@@ -118,9 +193,19 @@ function WorldMap() {
     setGameEnded(true);
     setGameStats(stats);
 
-    // get missed countries
-    const allCountryCodes = Object.values(continentData).flat();
-    const missed = allCountryCodes.filter(code => !correctGuesses.includes(code));
+    // get missed countries based on the current mode
+    let relevantCountries = [];
+    if (mode === 'Asia') {
+      relevantCountries = asiaCountries;
+    } else {
+      relevantCountries = Object.values(continentData).flat();
+    }
+    
+    const missed = relevantCountries.filter(code => 
+      !correctGuesses.includes(code) && 
+      !nonPlayableCountries.includes(code)
+    );
+    
     setMissedCountries(missed); // store missed countries
 
     // color missed countries red
@@ -134,25 +219,32 @@ function WorldMap() {
     });
   };
 
-  const resetGame = () => {
-    setCorrectGuesses([]);
-    setMissedCountries([]);
-    setGameEnded(false);
-    setGameStats(null);
+  const resetMapColors = () => {
+    if (!svgRef.current) return;
     
-    // reset the map colors
     const svg = d3.select(svgRef.current);
     
-    // reset playable countries
-    svg
-      .selectAll('path')
+    // set active/inactive countries based on the current mode
+    const activeCountries = mode === 'Asia' ? asiaCountries : Object.values(continentData).flat();
+    
+    // reset all country colors first
+    svg.selectAll('path')
+      .style('fill', '#dedede')
+      .style('stroke', '#648592')
+      .style('stroke-width', '0.2')
+      .style('cursor', 'default')
+      .on('mouseenter', null)
+      .on('mouseleave', null);
+    
+    // set active countries to white and enable hover
+    svg.selectAll('path')
       .filter(function() {
         const id = d3.select(this).attr('id');
-        return !nonPlayableCountries.includes(id);
+        return activeCountries.includes(id) && !nonPlayableCountries.includes(id);
       })
       .style('fill', '#fff')
-      .style('stroke', '#ccc')
-      .style('stroke-width', '0.5')
+      .style('stroke', '#648592')
+      .style('stroke-width', '0.2')
       .on('mouseenter', function () {
         d3.select(this).style('fill', '#ccc').style('cursor', 'pointer');
       })
@@ -161,89 +253,19 @@ function WorldMap() {
       });
   };
 
+  const resetGame = () => {
+    setCorrectGuesses([]);
+    setMissedCountries([]);
+    setGameEnded(false);
+    setGameStats(null);
+    resetMapColors();
+    setGameKey(prevKey => prevKey + 1); // Force re-render of Game component
+  };
+
+  // Initial setup
   useEffect(() => {
     if (!svgRef.current) return;
-
-    const svg = d3.select(svgRef.current);
-
-    // grey out non-playable countries
-    nonPlayableCountries.forEach(countryCode => {
-      const path = svg.select(`#${countryCode}`);
-      if (path.node()) {
-        path
-          .style('fill', '#d1d5db') // grey color
-          .style('cursor', 'default')
-          .on('mouseenter', null)
-          .on('mouseleave', null);
-      }
-    });
-
-    // set up remaining countries
-    svg
-      .selectAll('path')
-      .filter(function() {
-        // Skip already greyed out countries
-        const id = d3.select(this).attr('id');
-        return !nonPlayableCountries.includes(id);
-      })
-      .style('fill', '#fff')
-      .style('stroke', '#ccc')
-      .style('stroke-width', '0.5')
-      .on('mouseenter', function () {
-        if (!gameEnded) {
-          d3.select(this).style('fill', '#ccc').style('cursor', 'pointer');
-        }
-      })
-      .on('mouseleave', function () {
-        if (!gameEnded && d3.select(this).style('fill') !== 'rgb(74, 222, 128)') {
-          d3.select(this).style('fill', '#fff');
-        }
-      });
-
-    // zoom behavior
-    const zoom = d3
-      .zoom()
-      .scaleExtent([1, 8])
-      .on('zoom', (event) => {
-        svg.select('g').attr('transform', event.transform);
-      });
-
-    svg.call(zoom);
-
-    svg.on('dblclick.zoom', () => {
-      svg.transition().duration(750).call(zoom.transform, d3.zoomIdentity);
-    });
-
-    // hover effect
-    // svg
-    //   .selectAll('path')
-    //   .style('fill', '#fff')
-    //   .style('stroke', '#ccc')
-    //   .style('stroke-width', '0.5')
-    //   .on('mouseenter', function () {
-    //     if (!gameEnded) {
-    //       d3.select(this).style('fill', '#ccc').style('cursor', 'pointer');
-    //     }
-    //   })
-    //   .on('mouseleave', function () {
-    //     if (!gameEnded && d3.select(this).style('fill') !== 'rgb(74, 222, 128)') {
-    //       d3.select(this).style('fill', '#fff');
-    //     }
-    //   });
-
-    const handleResize = () => {
-      const width = svg.node().parentNode.clientWidth;
-      const height = svg.node().parentNode.clientHeight;
-      svg.attr('width', width).attr('height', height);
-    };
-
-    window.addEventListener('resize', handleResize);
-    handleResize();
-
-    return () => {
-      svg.on('.zoom', null);
-      window.removeEventListener('resize', handleResize);
-    };
+    resetMapColors();
   }, []);
 
   return (
@@ -1543,39 +1565,71 @@ function WorldMap() {
         {gameEnded && gameStats && (
           <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-50">
             <div className="bg-white p-6 rounded-lg shadow-lg text-center">
-              <h2 className="text-2xl font-bold mb-4">
-                Game Over!
-              </h2>
-              <p className="mb-2">
-                You correctly guessed {gameStats.correctGuesses} out of {gameStats.totalCountries} countries
-              </p>
-              <p className="mb-2">
-                Score: {Math.round((gameStats.correctGuesses / gameStats.totalCountries) * 100)}%
-              </p>
+              {gameStats.isWinner ? (
+                // Winner Modal
+                <>
+                  <h2 className="text-2xl font-bold mb-4 text-green-600">
+                    Congratulations! You Won!
+                  </h2>
+                  <p className="mb-2">
+                    You correctly guessed all {gameStats.totalCountries} countries!
+                  </p>
+                  <div className="mb-4 flex justify-center">
+                    <div className="text-5xl">🏆</div>
+                  </div>
+                </>
+              ) : (
+                // Game Over Modal
+                <>
+                  <h2 className="text-2xl font-bold mb-4">
+                    Game Over!
+                  </h2>
+                  <p className="mb-2">
+                    You correctly guessed {gameStats.correctGuesses} out of {gameStats.totalCountries} countries
+                  </p>
+                  <p className="mb-2">
+                    Score: {Math.round((gameStats.correctGuesses / gameStats.totalCountries) * 100)}%
+                  </p>
+                </>
+              )}
               <p className="mb-4">
                 {user ? '' : 'Please register an account or login to save your progress.' }
               </p>
-              <button
-                onClick={() => setGameEnded(false)} // just hide the modal dont reset
-                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-              >
-                Continue
-              </button>
+              <div className="flex justify-center space-x-3">
+                <button
+                  onClick={() => setGameEnded(false)}
+                  className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                >
+                  Continue
+                </button>
+                {gameStats.isWinner && (
+                  <button
+                    onClick={resetGame}
+                    className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+                  >
+                    Play Again
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         )}
         
         <RegionalGuessesPanel 
+          key={`regional-panel-${gameKey}`}
           continentData={continentData} 
           correctGuesses={correctGuesses} 
           missedCountries={missedCountries} 
-          countryNameMapping={countryNameMapping} 
+          countryNameMapping={countryNameMapping}
+          mode={mode}
         />
 
-        {/* game will handle display logic bruh */}
         <Game
+          key={`game-${gameKey}`}
           onCorrectGuess={handleCorrectGuess}
           onGameEnd={handleGameEnd}
+          onResetGame={resetGame}
+          mode={mode}
         />
       </div>
     </>
