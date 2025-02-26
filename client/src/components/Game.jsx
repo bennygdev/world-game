@@ -11,12 +11,45 @@ function Game({ onCorrectGuess, onGameEnd, mode, onResetGame }) {
   const [gameOver, setGameOver] = useState(false);
   const [showMessage, setShowMessage] = useState(false);
   
+  // Regional game modes
+  const northAmericaCountries = [
+    'CA', 'US', 'MX', // Main countries
+    'BZ', 'CR', 'CU', 'DO', 'GT', 'HN', 'HT', 'NI', 'PA', 'SV', // Central America
+    'AG', 'BB', 'BS', 'DM', 'GD', 'JM', 'KN', 'LC', 'TT', 'VC' // Caribbean islands (independent countries only)
+  ];
+
+  const southAmericaCountries = [
+    'AR', 'BO', 'BR', 'CL', 'CO', 'EC', 'GY', 'PE', 'PY', 'SR', 'UY', 'VE'
+  ];
+
+  const europeCountries = [
+    'AD', 'AL', 'AT', 'BA', 'BE', 'BG', 'BY', 'CH', 'CY', 'CZ', 
+    'DE', 'DK', 'EE', 'ES', 'FI', 'FR', 'GB', 'GR', 'HR', 'HU', 
+    'IE', 'IS', 'IT', 'LI', 'LT', 'LU', 'LV', 'MC', 'MD', 'ME', 
+    'MK', 'MT', 'NL', 'NO', 'PL', 'PT', 'RO', 'RS', 'RU', 'SE', 
+    'SI', 'SK', 'SM', 'UA', 'VA', 'XK'
+  ];
+
   const asiaCountries = [
     'AE', 'AF', 'AM', 'AZ', 'BD', 'BH', 'BN', 'BT', 'CN', 'GE', 
     'ID', 'IL', 'IN', 'IQ', 'IR', 'JO', 'JP', 'KG', 'KH', 'KP', 
     'KR', 'KW', 'KZ', 'LA', 'LB', 'LK', 'MM', 'MN', 'MV', 'MY', 
     'NP', 'OM', 'PH', 'PK', 'PS', 'QA', 'SA', 'SG', 'SY', 'TH', 
     'TJ', 'TL', 'TM', 'TW', 'UZ', 'VN', 'YE', 'TR'
+  ];
+
+  const africaCountries = [
+    'AO', 'BF', 'BI', 'BJ', 'BW', 'CD', 'CF', 'CG', 'CI', 'CM', 
+    'CV', 'DJ', 'DZ', 'EG', 'ER', 'ET', 'GA', 'GH', 'GM', 'GN', 
+    'GQ', 'GW', 'KE', 'KM', 'LR', 'LS', 'LY', 'MA', 'MG', 'ML', 
+    'MR', 'MU', 'MW', 'MZ', 'NA', 'NE', 'NG', 'RW', 'SC', 'SD', 
+    'SL', 'SN', 'SO', 'SS', 'ST', 'SZ', 'TD', 'TG', 'TN', 'TZ', 
+    'UG', 'ZA', 'ZM', 'ZW'
+  ];
+
+  const oceaniaCountries = [
+    'AU', 'FJ', 'FM', 'KI', 'MH', 'NR', 'NZ', 'PG', 'PW', 'SB', 
+    'TO', 'TV', 'VU', 'WS'
   ];
 
   // when mode changes reset game state and fetch countries accordingly
@@ -134,9 +167,19 @@ function Game({ onCorrectGuess, onGameEnd, mode, onResetGame }) {
       if (mode === 'Asia') {
         // only countries that are in the asia list
         gameCountries = gameCountries.filter(country => asiaCountries.includes(country.id));
+      } else if (mode === 'North America') {
+        gameCountries = gameCountries.filter(country => northAmericaCountries.includes(country.id));
+      } else if (mode === 'South America') {
+        gameCountries = gameCountries.filter(country => southAmericaCountries.includes(country.id));
+      } else if (mode === 'Africa') {
+        gameCountries = gameCountries.filter(country => africaCountries.includes(country.id));
+      } else if (mode === 'Europe') {
+        gameCountries = gameCountries.filter(country => europeCountries.includes(country.id));
+      } else if (mode === 'Oceania') {
+        gameCountries = gameCountries.filter(country => oceaniaCountries.includes(country.id));
       }
       
-      if (mode !== 'Asia' && gameCountries.length !== 197) {
+      if (mode !== 'Asia' && mode !== 'North America' && mode !== 'South America' && mode !== 'Africa' && mode !== 'Europe' && mode !== 'Oceania' && gameCountries.length !== 197) {
         console.warn(`Expected 197 countries, got ${gameCountries.length}`);
       }
       

@@ -5,8 +5,16 @@ function RegionalGuessesPanel({
   countryNameMapping, 
   mode
 }) {
-  // asia mode
-  const filteredData = mode === 'Asia' ? { Asia: continentData["Asia"] } : continentData;
+  // gamemodes
+  const filteredData = 
+  mode === 'World' ? continentData : 
+  mode === 'North America' ? { 'North America': continentData['North America'] } :
+  mode === 'South America' ? { 'South America': continentData['South America'] } :
+  mode === 'Europe' ? { Europe: continentData['Europe'] } :
+  mode === 'Asia' ? { Asia: continentData['Asia'] } :
+  mode === 'Africa' ? { Africa: continentData['Africa'] } :
+  mode === 'Oceania' ? { Oceania: continentData['Oceania'] } :
+  continentData; // Default fallback
 
   return (
     <div className="absolute bottom-4 left-4 bg-white p-4 rounded shadow-lg w-80 max-h-[50vh] overflow-auto">

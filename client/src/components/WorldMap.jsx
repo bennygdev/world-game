@@ -117,6 +117,7 @@ function WorldMap({ mode }) {
         svg.select('g').attr('transform', event.transform);
       });
     
+    // probably need to refactor code here to make it shorter
     if (mode === 'Asia') {
       // NOTE: This is not fully fixed yet... lol bruh why are you reading my commits????
       // For demonstration, use a fixed translation and scale.
@@ -130,6 +131,76 @@ function WorldMap({ mode }) {
         .filter(function() {
           const id = d3.select(this).attr('id');
           return !asiaCountries.includes(id);
+        })
+        .style('fill', '#dedede')
+        .on('mouseenter', null)
+        .on('mouseleave', null);
+    } else if (mode === 'North America') {
+      svg.transition().duration(750).call(
+        zoomTransition.transform,
+        d3.zoomIdentity.translate(0, -350).scale(2)
+      );
+
+      svg.selectAll('path')
+        .filter(function() {
+          const id = d3.select(this).attr('id');
+          return !northAmericaCountries.includes(id);
+        })
+        .style('fill', '#dedede')
+        .on('mouseenter', null)
+        .on('mouseleave', null);
+    } else if (mode === 'South America') {
+      svg.transition().duration(750).call(
+        zoomTransition.transform,
+        d3.zoomIdentity.translate(-200, -970).scale(2.3)
+      );
+
+      svg.selectAll('path')
+        .filter(function() {
+          const id = d3.select(this).attr('id');
+          return !southAmericaCountries.includes(id);
+        })
+        .style('fill', '#dedede')
+        .on('mouseenter', null)
+        .on('mouseleave', null);
+    } else if (mode === 'Europe') {
+      svg.transition().duration(750).call(
+        zoomTransition.transform,
+        d3.zoomIdentity.translate(-950, -150).scale(2)
+      );
+
+      svg.selectAll('path')
+        .filter(function() {
+          const id = d3.select(this).attr('id');
+          return !europeCountries.includes(id);
+        })
+        .style('fill', '#dedede')
+        .on('mouseenter', null)
+        .on('mouseleave', null);
+    } else if (mode === 'Africa') {
+      svg.transition().duration(750).call(
+        zoomTransition.transform,
+        d3.zoomIdentity.translate(-850, -870).scale(2.5)
+      );
+
+      svg.selectAll('path')
+        .filter(function() {
+          const id = d3.select(this).attr('id');
+          return !africaCountries.includes(id);
+        })
+        .style('fill', '#dedede')
+        .on('mouseenter', null)
+        .on('mouseleave', null);
+    } else if (mode === 'Oceania') {
+      svg.transition().duration(750).call(
+        zoomTransition.transform,
+        d3.zoomIdentity.translate(-3000, -1850).scale(4)
+      );
+
+      svg.selectAll('path')
+        .filter(function() {
+          const id = d3.select(this).attr('id');
+          return !oceaniaCountries.includes(id);
         })
         .style('fill', '#dedede')
         .on('mouseenter', null)
@@ -198,6 +269,16 @@ function WorldMap({ mode }) {
       let relevantCountries = [];
       if (mode === 'Asia') {
         relevantCountries = asiaCountries;
+      } else if (mode === 'North America') {
+        relevantCountries = northAmericaCountries;
+      } else if (mode === 'South America') {
+        relevantCountries = southAmericaCountries;
+      } else if (mode === 'Europe') {
+        relevantCountries = europeCountries;
+      } else if (mode === 'Africa') {
+        relevantCountries = africaCountries;
+      } else if (mode === 'Oceania') {
+        relevantCountries = oceaniaCountries;
       } else {
         relevantCountries = Object.values(continentData).flat();
       }
@@ -230,7 +311,14 @@ function WorldMap({ mode }) {
     const svg = d3.select(svgRef.current);
     
     // set active/inactive countries based on the current mode
-    const activeCountries = mode === 'Asia' ? asiaCountries : Object.values(continentData).flat();
+    const activeCountries = 
+    mode === 'Asia' ? asiaCountries : 
+    mode === 'North America' ? northAmericaCountries :
+    mode === 'South America' ? southAmericaCountries :
+    mode === 'Europe' ? europeCountries :
+    mode === 'Africa' ? africaCountries :
+    mode === 'Oceania' ? oceaniaCountries :
+    Object.values(continentData).flat();
     
     // reset all country colors first
     svg.selectAll('path')
