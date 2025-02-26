@@ -152,18 +152,27 @@ function Game({ onCorrectGuess, onGameEnd, mode, onResetGame }) {
     const guess = input.trim().toLowerCase();
     
     if (guess === '') return;
-    
-    if (guessedCountries.has(guess)) {
-      setMessage('You already guessed this country!');
-      setIsError(true);
-      return;
-    }
 
     const correctCountry = countries.find(country => 
       country.name === guess || country.alternatives.includes(guess)
     );
 
     if (correctCountry) {
+      // check if this country's path is already filled by checking if already registered a correct guess for this country ID
+      const alreadyGuessed = Array.from(guessedCountries).some(guessedName => {
+        const matchingCountry = countries.find(c => 
+          c.name === guessedName || c.alternatives.includes(guessedName)
+        );
+        return matchingCountry && matchingCountry.id === correctCountry.id;
+      });
+
+      if (alreadyGuessed) {
+        setMessage('You already guessed this country!');
+        setIsError(true);
+        setInput('');
+        return;
+      }
+
       const newGuessed = new Set(guessedCountries);
       newGuessed.add(guess);
       setGuessedCountries(newGuessed);
