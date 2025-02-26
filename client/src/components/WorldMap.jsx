@@ -193,30 +193,35 @@ function WorldMap({ mode }) {
     setGameEnded(true);
     setGameStats(stats);
 
-    // get missed countries based on the current mode
-    let relevantCountries = [];
-    if (mode === 'Asia') {
-      relevantCountries = asiaCountries;
-    } else {
-      relevantCountries = Object.values(continentData).flat();
-    }
-    
-    const missed = relevantCountries.filter(code => 
-      !correctGuesses.includes(code) && 
-      !nonPlayableCountries.includes(code)
-    );
-    
-    setMissedCountries(missed); // store missed countries
-
-    // color missed countries red
-    missed.forEach(countryCode => {
-      const path = d3.select(svgRef.current).select(`#${countryCode}`);
-      if (path.node()) {
-        path.style('fill', '#f87171')
-        .on('mouseenter', null)
-        .on('mouseleave', null);
+    if (!stats.isWinner) {
+      // get missed countries based on the current mode
+      let relevantCountries = [];
+      if (mode === 'Asia') {
+        relevantCountries = asiaCountries;
+      } else {
+        relevantCountries = Object.values(continentData).flat();
       }
-    });
+      
+      const missed = relevantCountries.filter(code => 
+        !correctGuesses.includes(code) && 
+        !nonPlayableCountries.includes(code)
+      );
+      
+      setMissedCountries(missed); // store missed countries
+
+      // color missed countries red
+      missed.forEach(countryCode => {
+        const path = d3.select(svgRef.current).select(`#${countryCode}`);
+        if (path.node()) {
+          path.style('fill', '#f87171')
+          .on('mouseenter', null)
+          .on('mouseleave', null);
+        }
+      });
+    } else {
+      // set missedCountries to an empty array if win
+      setMissedCountries([]);
+    }
   };
 
   const resetMapColors = () => {
