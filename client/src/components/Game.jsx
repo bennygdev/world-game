@@ -230,7 +230,24 @@ function Game({ onCorrectGuess, onGameEnd, mode, onResetGame }) {
         handleGameEnd(true, newSize);
       }
     } else {
-      setMessage('Not a recognized country');
+      // setMessage('Not a recognized country');
+      // setIsError(true);
+
+      // smarter message handler
+      const validCountries = {
+        "North America": northAmericaCountries,
+        "South America": southAmericaCountries,
+        "Europe": europeCountries,
+        "Asia": asiaCountries,
+        "Africa": africaCountries,
+        "Oceania": oceaniaCountries
+      };
+    
+      if (mode !== "World" && !validCountries[mode]?.some(c => c.toLowerCase() === guess)) {
+        setMessage(`This country is not in ${mode}`);
+      } else {
+        setMessage('Not a recognized country');
+      }
       setIsError(true);
     }
     
@@ -307,7 +324,7 @@ function Game({ onCorrectGuess, onGameEnd, mode, onResetGame }) {
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && !gameOver && handleGuess()}
               placeholder="Enter country name..."
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-200 disabled:text-gray-500"
               disabled={gameOver}
             />
             
