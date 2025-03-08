@@ -279,8 +279,12 @@ function WorldMap({ mode }) {
         .style('fill', '#4ade80') // color fill when correct
         .style('stroke', '#648592')
         .style('cursor', 'default')
-        .on('mouseenter', null)
-        .on('mouseleave', null);
+        .on('mouseenter', function() {
+          d3.select(this).style('fill', '#22bd5a');
+        })
+        .on('mouseleave', function() {
+          d3.select(this).style('fill', '#4ade80');
+        });
     } else {
       console.log('Country path not found:', countryCode);
     }
@@ -324,6 +328,7 @@ function WorldMap({ mode }) {
         if (path.node()) {
           path.style('fill', '#f87171')
             .on('mouseenter', function(event) {
+              d3.select(this).style('fill', '#e85454').style('cursor', 'pointer')
               const countryName = countryNameMapping[countryCode] || "Unknown";
               tooltip
                 .html(countryName)
@@ -337,6 +342,7 @@ function WorldMap({ mode }) {
                 .style('top', (event.pageY - 15) + 'px');
             })
             .on('mouseleave', function() {
+              d3.select(this).style('fill', '#f87171');
               tooltip.classed('hidden', true);
             });
         }
@@ -348,6 +354,7 @@ function WorldMap({ mode }) {
         if (path.node()) {
           path
             .on('mouseenter', function(event) {
+              d3.select(this).style('fill', '#22bd5a');
               const countryName = countryNameMapping[countryCode] || "Unknown";
               tooltip
                 .html(countryName)
@@ -361,6 +368,7 @@ function WorldMap({ mode }) {
                 .style('top', (event.pageY - 15) + 'px');
             })
             .on('mouseleave', function() {
+              d3.select(this).style('fill', '#4ade80');
               tooltip.classed('hidden', true);
             });
         }
@@ -430,7 +438,7 @@ function WorldMap({ mode }) {
       .style('stroke', '#648592')
       .style('stroke-width', '0.2')
       .on('mouseenter', function () {
-        d3.select(this).style('fill', '#ccc').style('cursor', 'pointer');
+        d3.select(this).style('fill', '#ededed').style('cursor', 'pointer');
       })
       .on('mouseleave', function () {
         d3.select(this).style('fill', '#fff');
@@ -448,9 +456,13 @@ function WorldMap({ mode }) {
 
     // remove tooltip event listeners
     d3.select(svgRef.current).selectAll('path')
-      .on('mouseenter', null)
       .on('mousemove', null)
-      .on('mouseleave', null);
+      .on('mouseenter', function () {
+        d3.select(this).style('fill', '#ededed').style('cursor', 'pointer');
+      })
+      .on('mouseleave', function () {
+        d3.select(this).style('fill', '#fff');
+      });
   };
 
   // Initial setup
