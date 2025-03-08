@@ -9,6 +9,7 @@ import confettiAnimation from '../assets/confetti.json';
 function WorldMap({ mode }) {
   const { user } = useAuth();
   const svgRef = useRef(null);
+  const tooltipRef = useRef(null);
   const [gameEnded, setGameEnded] = useState(false);
   const [gameStats, setGameStats] = useState(null);
   const [correctGuesses, setCorrectGuesses] = useState([]);
@@ -106,6 +107,28 @@ function WorldMap({ mode }) {
     return () => {
       svg.on('.zoom', null);
       window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!svgRef.current) return;
+    
+    // create div
+    if (!tooltipRef.current) {
+      const tooltip = d3.select('body')
+        .append('div')
+        .attr('class', 'absolute hidden bg-black/80 text-white px-2 py-1 rounded pointer-events-none z-50 text-sm')
+        .style('position', 'absolute');
+      
+      tooltipRef.current = tooltip;
+    }
+    
+    return () => {
+      // clean when unmount
+      if (tooltipRef.current) {
+        tooltipRef.current.remove();
+        tooltipRef.current = null;
+      }
     };
   }, []);
 
@@ -267,6 +290,8 @@ function WorldMap({ mode }) {
     setGameEnded(true);
     setGameStats(stats);
 
+    const tooltip = tooltipRef.current;
+
     if (!stats.isWinner) {
       // get missed countries based on the current mode
       let relevantCountries = [];
@@ -298,14 +323,76 @@ function WorldMap({ mode }) {
         const path = d3.select(svgRef.current).select(`#${countryCode}`);
         if (path.node()) {
           path.style('fill', '#f87171')
-          .on('mouseenter', null)
-          .on('mouseleave', null);
+            .on('mouseenter', function(event) {
+              const countryName = countryNameMapping[countryCode] || "Unknown";
+              tooltip
+                .html(countryName)
+                .style('left', (event.pageX + 10) + 'px')
+                .style('top', (event.pageY - 15) + 'px')
+                .classed('hidden', false);
+            })
+            .on('mousemove', function(event) {
+              tooltip
+                .style('left', (event.pageX + 10) + 'px')
+                .style('top', (event.pageY - 15) + 'px');
+            })
+            .on('mouseleave', function() {
+              tooltip.classed('hidden', true);
+            });
+        }
+      });
+
+      // add tooltips to correct guesses
+      correctGuesses.forEach(countryCode => {
+        const path = d3.select(svgRef.current).select(`#${countryCode}`);
+        if (path.node()) {
+          path
+            .on('mouseenter', function(event) {
+              const countryName = countryNameMapping[countryCode] || "Unknown";
+              tooltip
+                .html(countryName)
+                .style('left', (event.pageX + 10) + 'px')
+                .style('top', (event.pageY - 15) + 'px')
+                .classed('hidden', false);
+            })
+            .on('mousemove', function(event) {
+              tooltip
+                .style('left', (event.pageX + 10) + 'px')
+                .style('top', (event.pageY - 15) + 'px');
+            })
+            .on('mouseleave', function() {
+              tooltip.classed('hidden', true);
+            });
         }
       });
     } else {
       // set missedCountries to an empty array if win
       setShowConfetti(true);
       setMissedCountries([]);
+
+      // all correctly guessed countries tooltips
+      correctGuesses.forEach(countryCode => {
+        const path = d3.select(svgRef.current).select(`#${countryCode}`);
+        if (path.node()) {
+          path
+            .on('mouseenter', function(event) {
+              const countryName = countryNameMapping[countryCode] || "Unknown";
+              tooltip
+                .html(countryName)
+                .style('left', (event.pageX + 10) + 'px')
+                .style('top', (event.pageY - 15) + 'px')
+                .classed('hidden', false);
+            })
+            .on('mousemove', function(event) {
+              tooltip
+                .style('left', (event.pageX + 10) + 'px')
+                .style('top', (event.pageY - 15) + 'px');
+            })
+            .on('mouseleave', function() {
+              tooltip.classed('hidden', true);
+            });
+        }
+      });
     }
   };
 
@@ -358,6 +445,12 @@ function WorldMap({ mode }) {
     setShowConfetti(false);
     resetMapColors();
     setGameKey(prevKey => prevKey + 1); // Force re-render of Game component
+
+    // remove tooltip event listeners
+    d3.select(svgRef.current).selectAll('path')
+      .on('mouseenter', null)
+      .on('mousemove', null)
+      .on('mouseleave', null);
   };
 
   // Initial setup
