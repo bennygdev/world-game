@@ -3,6 +3,8 @@ import * as d3 from 'd3';
 import Game from './Game';
 import RegionalGuessesPanel from './RegionalGuessesPanel';
 import { useAuth } from '../hooks/Auth';
+import Lottie from 'lottie-react';
+import confettiAnimation from '../assets/confetti.json';
 
 function WorldMap({ mode }) {
   const { user } = useAuth();
@@ -13,6 +15,7 @@ function WorldMap({ mode }) {
   const [missedCountries, setMissedCountries] = useState([]);
   const [countryNameMapping, setCountryNameMapping] = useState({});
   const [gameKey, setGameKey] = useState(0);
+  const [showConfetti, setShowConfetti] = useState(false);
 
   // Non-playable countries
   const nonPlayableCountries = [
@@ -301,6 +304,7 @@ function WorldMap({ mode }) {
       });
     } else {
       // set missedCountries to an empty array if win
+      setShowConfetti(true);
       setMissedCountries([]);
     }
   };
@@ -351,6 +355,7 @@ function WorldMap({ mode }) {
     setMissedCountries([]);
     setGameEnded(false);
     setGameStats(null);
+    setShowConfetti(false);
     resetMapColors();
     setGameKey(prevKey => prevKey + 1); // Force re-render of Game component
   };
@@ -1655,8 +1660,20 @@ function WorldMap({ mode }) {
           </g>
         </svg>
 
+        {/* confetti animation */}
+        {showConfetti && (
+          <div className="absolute inset-0 pointer-events-none z-50">
+            <Lottie 
+              animationData={confettiAnimation} 
+              loop={true}
+              autoplay={true}
+              style={{ width: '100%', height: '100%' }}
+            />
+          </div>
+        )}
+
         {gameEnded && gameStats && (
-          <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-45">
             <div className="bg-white p-6 rounded-lg shadow-lg text-center">
               {gameStats.isWinner ? (
                 // Winner Modal
@@ -1690,7 +1707,10 @@ function WorldMap({ mode }) {
               </p>
               <div className="flex justify-center space-x-3">
                 <button
-                  onClick={() => setGameEnded(false)}
+                  onClick={() => {
+                    setShowConfetti(false)
+                    setGameEnded(false)
+                  }}
                   className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
                 >
                   Continue
