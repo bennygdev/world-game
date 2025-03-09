@@ -328,7 +328,7 @@ function WorldMap({ mode }) {
         if (path.node()) {
           path.style('fill', '#f87171')
             .on('mouseenter', function(event) {
-              d3.select(this).style('fill', '#e85454').style('cursor', 'pointer')
+              // d3.select(this).style('fill', '#e85454').style('cursor', 'pointer')
               const countryName = countryNameMapping[countryCode] || "Unknown";
               tooltip
                 .html(countryName)
@@ -342,7 +342,7 @@ function WorldMap({ mode }) {
                 .style('top', (event.pageY - 15) + 'px');
             })
             .on('mouseleave', function() {
-              d3.select(this).style('fill', '#f87171');
+              // d3.select(this).style('fill', '#f87171');
               tooltip.classed('hidden', true);
             });
         }
